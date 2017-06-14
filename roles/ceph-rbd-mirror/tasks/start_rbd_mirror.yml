@@ -1,0 +1,7 @@
+---
+- name: start and add that the rbd mirror service to the init sequence
+  service:
+      name: "ceph-rbd-mirror@{{ ceph_rbd_mirror_local_user }}"
+      state: started
+      enabled: yes
+  changed_when: false

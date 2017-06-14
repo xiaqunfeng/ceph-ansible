@@ -1,0 +1,37 @@
+---
+- name: create ceph conf directory and assemble directory
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "ceph"
+    group: "ceph"
+    mode: "0755"
+  with_items:
+    - /etc/ceph/
+    - /etc/ceph/ceph.d/
+
+- name: "generate ceph configuration file: {{ cluster }}.conf"
+  action: config_template
+  args:
+    src: ceph.conf.j2
+    dest: /etc/ceph/ceph.d/{{ cluster }}.conf
+    owner: "ceph"
+    group: "ceph"
+    mode: "0644"
+    config_overrides: "{{ ceph_conf_overrides }}"
+    config_type: ini
+
+- name: assemble {{ cluster }}.conf and fragments
+  assemble:
+    src: /etc/ceph/ceph.d/
+    dest: /etc/ceph/{{ cluster }}.conf
+    regexp: "^(({{cluster}})|(osd)).conf$"
+    owner: "ceph"
+    group: "ceph"
+    mode: "0644"
+  notify:
+    - restart ceph mons
+    - restart ceph osds
+    - restart ceph mdss
+    - restart ceph rgws
+    - restart ceph nfss

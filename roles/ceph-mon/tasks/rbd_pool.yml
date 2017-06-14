@@ -1,0 +1,17 @@
+---
+- name: check rbd pool usage
+  shell: |
+    ceph --connect-timeout 5 --cluster {{ cluster }} df | awk '/rbd/ {print $3}'
+  changed_when: false
+  failed_when: false
+  always_run: true
+  register: rbd_pool_df
+
+- name: check pg num for rbd pool
+  shell: |
+    ceph --connect-timeout 5 --cluster {{ cluster }} osd pool get rbd pg_num | awk '{print $2}'
+  changed_when: false
+  failed_when: false
+  always_run: true
+  register: rbd_pool_pgs
+

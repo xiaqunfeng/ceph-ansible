@@ -1,0 +1,18 @@
+---
+- name: install dependencies
+  # XXX Determine what RH repository this will belong to so that it can be
+  # properly checked and errored if the repository is not enabled.
+  package:
+    name: rbd-mirror
+    state: present
+  tags:
+    - package-install
+
+- name: copy ceph admin key
+  copy:
+    src: "{{ fetch_directory }}/{{ fsid }}/etc/ceph/{{ cluster }}.client.admin.keyring"
+    dest: "/etc/ceph/{{ cluster }}.client.admin.keyring"
+    owner: "ceph"
+    group: "ceph"
+    mode: "0600"
+  when: cephx

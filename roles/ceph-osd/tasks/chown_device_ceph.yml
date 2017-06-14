@@ -1,0 +1,13 @@
+---
+# NOTE: change all device authority from root to ceph
+# partition
+
+- name: change device authority to ceph before activate
+  command: chown ceph:ceph {{ item }}
+  with_items: 
+    - "{{ devices }}"
+    - "{{ raw_journal_devices }}"
+  changed_when: false
+  failed_when: false
+  when:
+    - not osd_auto_discovery

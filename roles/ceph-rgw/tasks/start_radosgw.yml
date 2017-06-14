@@ -1,0 +1,13 @@
+---
+- name: check if rgw is started
+  command: /etc/init.d/radosgw status
+  register: rgwstatus
+  changed_when: false
+  failed_when: false
+  always_run: true
+
+- name: start rgw
+  service:
+    name: ceph-radosgw@rgw.{{ ansible_hostname }}
+    state: started
+    enabled: yes

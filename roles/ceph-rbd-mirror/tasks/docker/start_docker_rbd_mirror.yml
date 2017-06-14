@@ -1,0 +1,27 @@
+---
+# Use systemd to manage container on Atomic host
+- name: generate systemd unit file
+  become: true
+  template:
+    src: "{{ role_path }}/templates/ceph-rbd-mirror.service.j2"
+    dest: /etc/systemd/system/ceph-rbd-mirror@.service
+    owner: "root"
+    group: "root"
+    mode: "0644"
+
+- name: enable systemd unit file for rbd mirror instance
+  command: systemctl enable ceph-rbd-mirror@{{ ansible_hostname }}.service
+  failed_when: false
+  changed_when: false
+
+- name: reload systemd unit files
+  command: systemctl daemon-reload
+  changed_when: false
+  failed_when: false
+
+- name: systemd start rbd mirror container
+  service:
+    name: ceph-rbd-mirror@{{ ansible_hostname }}
+    state: started
+    enabled: yes
+  changed_when: false

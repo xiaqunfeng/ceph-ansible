@@ -1,0 +1,34 @@
+---
+- name: make sure an installation origin was chosen
+  fail:
+    msg: "choose an installation origin"
+  when:
+    - ceph_origin != 'upstream'
+    - ceph_origin != 'distro'
+    - ceph_origin != 'local'
+  tags:
+    - package-install
+
+- name: make sure an installation source was chosen
+  fail:
+    msg: "choose an upstream installation source or read https://github.com/ceph/ceph-ansible/wiki"
+  when:
+    - ceph_origin == 'upstream'
+    - not ceph_stable
+    - not ceph_dev
+    - not ceph_rhcs
+    - not ceph_stable_uca
+    - not ceph_custom
+  tags:
+    - package-install
+
+- name: verify that a method was chosen for red hat storage
+  fail:
+    msg: "choose between ceph_rhcs_cdn_install and ceph_rhcs_iso_install"
+  when:
+    - ceph_rhcs
+    - not ceph_rhcs_cdn_install
+    - not ceph_rhcs_iso_install
+    - ceph_origin == "upstream"
+  tags:
+    - package-install

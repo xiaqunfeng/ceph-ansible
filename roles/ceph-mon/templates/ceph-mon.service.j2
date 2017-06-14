@@ -1,0 +1,37 @@
+[Unit]
+Description=Ceph Monitor
+After=docker.service
+
+[Service]
+EnvironmentFile=-/etc/environment
+ExecStartPre=-/usr/bin/docker rm ceph-mon-%i
+ExecStartPre=$(command -v mkdir) -p /etc/ceph /var/lib/ceph/mon
+ExecStart=/usr/bin/docker run --rm --name ceph-mon-%i --net=host \
+   {% if not mon_containerized_deployment_with_kv -%}
+   -v /var/lib/ceph:/var/lib/ceph \
+   -v /etc/ceph:/etc/ceph \
+   {% else -%}
+   -e KV_TYPE={{kv_type}} \
+   -e KV_IP={{kv_endpoint}}\
+   -e KV_PORT={{kv_port}} \
+   {% endif -%}
+   -v /etc/localtime:/etc/localtime:ro \
+   {% if mon_docker_privileged -%}
+   --privileged \
+   {% endif -%}
+   {% if mon_docker_net_host -%}
+   --net=host \
+   {% endif -%}
+   -e CEPH_DAEMON=MON \
+   -e MON_IP={{ hostvars[inventory_hostname]['ansible_' + ceph_mon_docker_interface]['ipv4']['address'] }} \
+   -e CEPH_PUBLIC_NETWORK={{ ceph_mon_docker_subnet }} \
+   {{ ceph_mon_docker_extra_env }} \
+   {{ceph_docker_registry }}/{{ ceph_docker_image }}:{{ ceph_docker_image_tag }}
+ExecStopPost=-/usr/bin/docker stop ceph-mon-%i
+Restart=always
+RestartSec=10s
+TimeoutStartSec=120
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,26 @@
+---
+- name: generate systemd unit file
+  become: true
+  template:
+    src: "{{ role_path }}/templates/ceph-mds.service.j2"
+    dest: /etc/systemd/system/ceph-mds@.service
+    owner: "root"
+    group: "root"
+    mode: "0644"
+
+- name: enable systemd unit file for mds instance
+  shell: systemctl enable ceph-mds@{{ ansible_hostname }}.service
+  failed_when: false
+  changed_when: false
+
+- name: reload systemd unit files
+  shell: systemctl daemon-reload
+  changed_when: false
+  failed_when: false
+
+- name: systemd start mds container
+  service:
+    name: ceph-mds@{{ ansible_hostname }}
+    state: started
+    enabled: yes
+  changed_when: false

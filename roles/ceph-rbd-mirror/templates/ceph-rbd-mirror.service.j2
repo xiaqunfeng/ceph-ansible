@@ -1,0 +1,28 @@
+[Unit]
+Description=Ceph RBD mirror
+After=docker.service
+
+[Service]
+EnvironmentFile=-/etc/environment
+ExecStartPre=-/usr/bin/docker stop ceph-rbd-mirror-{{ ansible_hostname }}
+ExecStartPre=-/usr/bin/docker rm ceph-rbd-mirror-{{ ansible_hostname }}
+ExecStart=/usr/bin/docker run --rm --net=host \
+   {% if not rbd_mirror_containerized_deployment_with_kv -%}
+   -v /etc/ceph:/etc/ceph \
+   {% else -%}
+   -e KV_TYPE={{kv_type}} \
+   -e KV_IP={{kv_endpoint}} \
+   -e KV_PORT={{kv_port}} \
+   {% endif -%}
+   -v /etc/localtime:/etc/localtime:ro \
+   -e CEPH_DAEMON=RBD_MIRROR \
+   --name=ceph-rbd-mirror-{{ ansible_hostname }} \
+   {{ ceph_docker_registry }}/{{ ceph_docker_image }}:{{ ceph_docker_image_tag }}
+ExecStopPost=-/usr/bin/docker stop ceph-rbd-mirror-{{ ansible_hostname }}
+Restart=always
+RestartSec=10s
+TimeoutStartSec=120
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target

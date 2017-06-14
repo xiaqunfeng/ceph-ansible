@@ -1,0 +1,52 @@
+---
+- name: generate monitor initial keyring
+  local_action: shell python2 -c "import os ; import struct ; import time; import base64 ; key = os.urandom(16) ; header = struct.pack('<hiih',1,int(time.time()),0,len(key)) ; print base64.b64encode(header + key)" | tee {{ fetch_directory }}/monitor_keyring.conf
+    creates={{ fetch_directory }}/monitor_keyring.conf
+  register: monitor_keyring
+  become: false
+  when: cephx
+
+- name: read monitor initial keyring if it already exists
+  local_action: command cat {{ fetch_directory }}/monitor_keyring.conf
+    removes={{ fetch_directory }}/monitor_keyring.conf
+  changed_when: false
+  register: monitor_keyring
+  become: false
+  always_run: true
+  when: cephx
+
+- name: create monitor initial keyring
+  command: ceph-authtool /var/lib/ceph/tmp/keyring.mon.{{ monitor_name }} --create-keyring --name=mon. --add-key={{ monitor_secret }} --cap mon 'allow *'
+  args:
+    creates: /var/lib/ceph/tmp/keyring.mon.{{ monitor_name }}
+  when: cephx
+
+- name: set initial monitor key permissions
+  file:
+    path: /var/lib/ceph/tmp/keyring.mon.{{ monitor_name }}
+    owner: "ceph"
+    group: "ceph"
+    mode: "0600"
+  when: cephx
+
+- name: create monitor directory
+  file:
+    path: /var/lib/ceph/mon/{{ cluster }}-{{ monitor_name }}
+    state: directory
+    owner: "ceph"
+    group: "ceph"
+    mode: "0755"
+
+- name: ceph monitor mkfs with keyring
+  command: ceph-mon --cluster {{ cluster }} --setuser ceph --setgroup ceph --mkfs -i {{ monitor_name }} --fsid {{ fsid }} --keyring /var/lib/ceph/tmp/keyring.mon.{{ monitor_name }}
+  args:
+    creates: /var/lib/ceph/mon/{{ cluster }}-{{ monitor_name }}/keyring
+  when:
+    - cephx
+
+- name: ceph monitor mkfs without keyring
+  command: ceph-mon --cluster {{ cluster }} --setuser ceph --setgroup ceph --mkfs -i {{ monitor_name }} --fsid {{ fsid }}
+  args:
+    creates: /var/lib/ceph/mon/{{ cluster }}-{{ monitor_name }}/store.db
+  when:
+    - not cephx

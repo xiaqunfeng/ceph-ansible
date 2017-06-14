@@ -1,0 +1,46 @@
+---
+- name: enable extras repo for centos
+  ini_file:
+    dest: /etc/yum.repos.d/CentOS-Base.repo
+    section: extras
+    option: enabled
+    value: 1
+  when: ansible_distribution == 'CentOS'
+
+- name: install rependencies
+  package:
+    name: parted
+    state: present
+
+- name: create bootstrap-osd and osd directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "ceph"
+    group: "ceph"
+    mode: "0755"
+  when:
+    cephx
+  with_items:
+    - /var/lib/ceph/bootstrap-osd/
+    - /var/lib/ceph/osd/
+
+- name: copy ceph admin key when using dmcrypt
+  set_fact:
+    copy_admin_key: true
+  when:
+    - dmcrypt_journal_collocation or dmcrypt_dedicated_journal
+
+- name: copy osd bootstrap key
+  copy:
+    src: "{{ fetch_directory }}/{{ fsid }}{{ item.name }}"
+    dest: "{{ item.name }}"
+    owner: "ceph"
+    group: "ceph"
+    mode: "0600"
+  with_items:
+    - { name: "/var/lib/ceph/bootstrap-osd/{{ cluster }}.keyring", copy_key: true }
+    - { name: "/etc/ceph/{{ cluster }}.client.admin.keyring", copy_key: "{{ copy_admin_key }}" }
+  when:
+    - cephx
+    - item.copy_key|bool

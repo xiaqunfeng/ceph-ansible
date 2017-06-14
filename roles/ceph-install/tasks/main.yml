@@ -1,0 +1,17 @@
+---
+- name: copy ceph.repo into /etc/yum.repos.d/
+  template:
+    src: ./templates/ceph.repo.j2
+    dest: /etc/yum.repos.d/ceph.repo
+    owner: root
+    group: root
+    mode: 0644
+  when:
+    - ceph_custom
+
+- name: install ceph through yum
+  yum:
+    name: ceph
+    state: present 
+  when:
+    - ceph_custom

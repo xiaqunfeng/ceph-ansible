@@ -1,0 +1,10 @@
+---
+- hosts: localhost
+  become: true
+  roles:
+    - ceph.ceph-common
+    - ceph-mon
+    - ceph-osd
+    - ceph-mds
+    - ceph-rgw
+    - ceph-fetch-keys

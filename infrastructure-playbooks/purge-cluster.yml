@@ -1,0 +1,532 @@
+---
+# This playbook purges Ceph
+# It removes: packages, configuration files and ALL THE DATA
+#
+# Use it like this:
+# ansible-playbook purge-cluster.yml
+#     Prompts for confirmation to purge, defaults to no and
+#     doesn't purge the cluster. yes purges the cluster.
+#
+# ansible-playbook -e ireallymeanit=yes|no purge-cluster.yml
+#     Overrides the prompt using -e option. Can be used in
+#     automation scripts to avoid interactive prompt.
+
+- name: confirm whether user really meant to purge the cluster
+  hosts: localhost
+  gather_facts: false
+
+  vars_prompt:
+    - name: ireallymeanit
+      prompt: Are you sure you want to purge the cluster?
+      default: 'no'
+      private: no
+
+  tasks:
+  - name: exit playbook, if user did not mean to purge cluster
+    fail:
+      msg: >
+        "Exiting purge-cluster playbook, cluster was NOT purged.
+         To purge the cluster, either say 'yes' on the prompt or
+         or use `-e ireallymeanit=yes` on the command line when
+         invoking the playbook"
+    when: ireallymeanit != 'yes'
+
+- name: gather facts on all hosts
+
+  hosts:
+    - "{{ mon_group_name|default('mons') }}"
+    - "{{ osd_group_name|default('osds') }}"
+    - "{{ mds_group_name|default('mdss') }}"
+    - "{{ rgw_group_name|default('rgws') }}"
+    - "{{ rbdmirror_group_name|default('rbdmirrors') }}"
+    - "{{ nfs_group_name|default('nfss') }}"
+    - "{{ client_group_name|default('clients') }}"
+
+  become: true
+
+  tasks:
+    - debug: msg="gather facts on all Ceph hosts for following reference"
+
+- name: purge ceph mds cluster
+
+  vars:
+    mds_group_name: mdss
+
+  hosts:
+    - "{{ mds_group_name|default('mdss') }}"
+
+  gather_facts: false # Already gathered previously
+
+  become: true
+
+  tasks:
+
+  - name: stop ceph mdss with systemd
+    service:
+      name: ceph-mds@{{ ansible_hostname }}
+      state: stopped
+      enabled: no
+    when: ansible_service_mgr == 'systemd'
+
+  - name: stop ceph mdss
+    shell: "service ceph status mds ; if [ $? == 0 ] ; then service ceph stop mds ; else echo ; fi"
+    when: ansible_service_mgr == 'sysvinit'
+
+  - name: stop ceph mdss on ubuntu
+    command: initctl stop ceph-mds cluster={{ cluster }} id={{ ansible_hostname }}
+    failed_when: false
+    when: ansible_service_mgr == 'upstart'
+
+
+- name: purge ceph rgw cluster
+
+  vars:
+    rgw_group_name: rgws
+
+  hosts:
+    - "{{ rgw_group_name|default('rgws') }}"
+
+  gather_facts: false # Already gathered previously
+
+  become: true
+
+  tasks:
+
+  - name: stop ceph rgws with systemd
+    service:
+      name: ceph-radosgw@rgw.{{ ansible_hostname }}
+      state: stopped
+      enabled: no
+    when: ansible_service_mgr == 'systemd'
+
+  - name: stop ceph rgws
+    shell: "service ceph-radosgw status ; if [ $? == 0 ] ; then service ceph-radosgw stop ; else echo ; fi"
+    when: ansible_service_mgr == 'sysvinit'
+
+  - name: stop ceph rgws on ubuntu
+    command: initctl stop radosgw cluster={{ cluster }} id={{ ansible_hostname }}
+    failed_when: false
+    when: ansible_service_mgr == 'upstart'
+
+
+- name: purge ceph rbd-mirror cluster
+
+  vars:
+    rbdmirror_group_name: rbd-mirrors
+
+  hosts:
+    - "{{ rbdmirror_group_name|default('rbdmirrors') }}"
+
+  gather_facts: false # Already gathered previously
+
+  become: true
+
+  tasks:
+
+  - name: stop ceph rbd mirror with systemd
+    service:
+      name: ceph-rbd-mirror@admin.service
+      state: stopped
+    when: ansible_service_mgr == 'systemd'
+
+  - name: stop ceph rbd mirror on ubuntu
+    command: initctl stop ceph-rbd-mirror cluster={{ cluster }} id=admin
+    failed_when: false
+    when: ansible_service_mgr == 'upstart'
+
+
+- name: purge ceph nfs cluster
+
+  vars:
+    nfs_group_name: nfss
+
+  hosts:
+    - "{{ nfs_group_name|default('nfss') }}"
+
+  gather_facts: false # Already gathered previously
+
+  become: true
+
+  tasks:
+
+  - name: stop ceph nfss with systemd
+    service:
+      name: nfs-ganesha
+      state: stopped
+    when: ansible_service_mgr == 'systemd'
+
+  - name: stop ceph nfss
+    shell: "service nfs-ganesha status ; if [ $? == 0 ] ; then service nfs-ganesha stop ; else echo ; fi"
+    when: ansible_service_mgr == 'sysvinit'
+
+  - name: stop ceph nfss on ubuntu
+    command: initctl stop nfs-ganesha
+    failed_when: false
+    when: ansible_service_mgr == 'upstart'
+
+
+- name: purge ceph osd cluster
+
+  vars:
+    osd_group_name: osds
+
+  hosts:
+    - "{{ osd_group_name|default('osds') }}"
+
+  gather_facts: false # Already gathered previously
+
+  become: true
+
+  handlers:
+  - name: restart machine
+    shell: sleep 2 && shutdown -r now "Ansible updates triggered"
+    async: 1
+    poll: 0
+    ignore_errors: true
+
+  - name: wait for server to boot
+    become: false
+    local_action: wait_for port=22 host={{ inventory_hostname }} state=started delay=10 timeout=500
+
+  - name: remove data
+    file:
+     path: /var/lib/ceph
+     state: absent
+
+  tasks:
+
+  - name: check for a device list
+    fail:
+      msg: "OSD automatic discovery was detected, purge cluster does not support this scenario. If you want to purge the cluster, manually provide the list of devices in group_vars/{{ osd_group_name }} using the devices variable."
+    when:
+      - devices|length == 0
+      - osd_auto_discovery
+
+  - name: get osd numbers
+    shell: "if [ -d /var/lib/ceph/osd ] ; then ls /var/lib/ceph/osd | sed 's/.*-//' ; fi"
+    register: osd_ids
+    changed_when: false
+
+  - name: stop ceph-osd with systemd
+    service:
+      name: ceph-osd@{{item}}
+      state: stopped
+      enabled: no
+    with_items: "{{ osd_ids.stdout_lines }}"
+    when: ansible_service_mgr == 'systemd'
+
+  # before infernalis release, using sysvinit scripts
+  # we use this test so we do not have to know which RPM contains the boot script
+  # or where it is placed.
+
+  - name: stop ceph osds
+    shell: "service ceph status osd ; if [ $? == 0 ] ; then service ceph stop osd ; else echo ; fi"
+    when: ansible_service_mgr == 'sysvinit'
+
+  - name: stop ceph osds on ubuntu
+    command: initctl stop ceph-osd cluster={{ cluster }} id={{ item }}
+    failed_when: false
+    when: ansible_service_mgr == 'upstart'
+    with_items: "{{ osd_ids.stdout_lines }}"
+
+  - name: see if ceph-disk-created data partitions are present
+    shell: |
+      ls /dev/disk/by-partlabel | grep -q "ceph.*.data"
+    failed_when: false
+    register: ceph_data_partlabels
+
+  - name: see if ceph-disk-created journal partitions are present
+    shell: |
+      ls /dev/disk/by-partlabel | grep -q "ceph.*.journal"
+    failed_when: false
+    register: ceph_journal_partlabels
+
+#   Initial attempt, doing everything in Ansible...
+#  - name: see if encrypted partitions are present
+#    shell: blkid -t TYPE=crypto_LUKS -o value -s PARTUUID
+#    register: encrypted_partuuid
+#
+#  - name: find if these encrypted partitions are ceph data partitions
+#    shell: blkid -t PARTLABEL="ceph data" -o value -s PARTUUID $(blkid -U {{ item }})
+#    failed_when: false
+#    with_items: "{{ encrypted_partuuid.stdout_lines }}"
+#    when: "{{ encrypted_partuuid | length > 0 }}"
+#    register: encrypted_partuuid_ceph_data
+#
+#  - name: find if these encrypted partitions are ceph journal partitions
+#    shell: blkid -t PARTLABEL="ceph journal" -o value -s PARTUUID $(blkid -U {{ item }})
+#    failed_when: false
+#    with_items: "{{ encrypted_partuuid.stdout_lines }}"
+#    when: "{{ encrypted_partuuid | length > 0 }}"
+#    register: encrypted_partuuid_ceph_journal
+#
+#  - name: merge the list of ceph encrypted partitions
+#    set_fact:
+#      encrypted_partuuid_ceph: "{{ encrypted_partuuid_ceph_data + encrypted_partuuid_ceph_journal }}"
+
+  # NOTE(leseb): hope someone will find a more elegant way one day...
+  - name: see if encrypted partitions are present
+    shell: |
+      blkid -t TYPE=crypto_LUKS -s PARTLABEL -s PARTUUID | grep "ceph.*." | grep -o PARTUUID.* | cut -d '"' -f 2
+    register: encrypted_ceph_partuuid
+
+  - name: get osd data mount points
+    shell: "(grep /var/lib/ceph/osd /proc/mounts || echo -n) | awk '{ print $2 }'"
+    register: mounted_osd
+    changed_when: false
+
+  - name: drop all cache
+    shell: "sync && sleep 1 && echo 3 > /proc/sys/vm/drop_caches"
+
+  - name: umount osd data partition
+    shell: umount {{ item }}
+    with_items: "{{ mounted_osd.stdout_lines }}"
+
+  - name: remove osd mountpoint tree
+    file:
+      path: /var/lib/ceph/osd/
+      state: absent
+    register: remove_osd_mountpoints
+    ignore_errors: true
+
+  - name: is reboot needed
+    local_action: shell echo requesting reboot
+    become: false
+    notify:
+      - restart machine
+      - wait for server to boot
+      - remove data
+    when: remove_osd_mountpoints.failed is defined
+
+  - name: see if ceph-disk is installed
+    shell: "which ceph-disk"
+    failed_when: false
+    register: ceph_disk_present
+
+  - name: delete dm-crypt devices if any
+    command: dmsetup remove {{ item }}
+    with_items: "{{ encrypted_ceph_partuuid.stdout_lines }}"
+    when: "{{ encrypted_ceph_partuuid.stdout_lines | length > 0 }}"
+
+  - name: zap osd disks
+    shell: ceph-disk zap "{{ item }}"
+    with_items: "{{ devices }}"
+    when:
+      - ceph_disk_present.rc == 0
+      - ceph_data_partlabels.rc == 0
+
+  - name: get ceph journal partitions
+    shell: |
+      blkid | awk '/ceph journal/ { sub (":", "", $1); print $1 }'
+    when: ceph_journal_partlabels.rc == 0
+    failed_when: false
+    register: ceph_journal_partition_to_erase_path
+
+  - name: zap ceph journal partitions
+    shell: |
+      # if the disk passed is a raw device AND the boot system disk
+      if echo "{{ item }}" | egrep -sq '/dev/([hsv]d[a-z]{1,2}|cciss/c[0-9]d[0-9]p|nvme[0-9]n[0-9]p){1,2}$' && parted -s $(echo "{{ item }}" | egrep -o '/dev/([hsv]d[a-z]{1,2}|cciss/c[0-9]d[0-9]p|nvme[0-9]n[0-9]p){1,2}') print | grep -sq boot; then
+        echo "Looks like {{ item }} has a boot partition,"
+        echo "if you want to delete specific partitions point to the partition instead of the raw device"
+        echo "Do not use your system disk!"
+        exit 1
+      fi
+      raw_device=$(echo "{{ item }}" | egrep -o '/dev/([hsv]d[a-z]{1,2}|cciss/c[0-9]d[0-9]|nvme[0-9]n[0-9]){1,2}')
+      partition_nb=$(echo "{{ item }}" | egrep -o '[0-9]{1,2}$')
+      sgdisk --delete $partition_nb $raw_device
+    with_items: "{{ ceph_journal_partition_to_erase_path.stdout_lines | default([]) }}"
+    when:
+      - ceph_journal_partlabels.rc == 0
+      - (raw_multi_journal is defined and raw_multi_journal) or (dmcrypt_dedicated_journal is defined and dmcrypt_dedicated_journal)
+
+- name: purge ceph mon cluster
+
+  vars:
+    mon_group_name:       mons
+    restapi_group_name:   restapis
+
+  hosts:
+    - "{{ mon_group_name|default('mons') }}"
+
+  gather_facts: false # Already gathered previously
+
+  become: true
+
+  tasks:
+
+  - name: stop ceph mons with systemd
+    service:
+      name: ceph-mon@{{ ansible_hostname }}
+      state: stopped
+      enabled: no
+    when: ansible_service_mgr == 'systemd'
+
+  - name: stop ceph mons
+    shell: "service ceph status mon ; if [ $? == 0 ] ; then service ceph stop mon ; else echo ; fi"
+    when: ansible_service_mgr == 'sysvinit'
+
+  - name: stop ceph mons on ubuntu
+    command: initctl stop ceph-mon cluster={{ cluster }} id={{ ansible_hostname }}
+    failed_when: false
+    when: ansible_service_mgr == 'upstart'
+
+  - name: remove monitor store and bootstrap keys
+    file:
+      path: /var/lib/ceph/
+      state: absent
+
+- name: final cleanup - check any running ceph, purge ceph packages, purge config and remove data
+
+  vars:
+    # When set to true both groups of packages are purged.
+    # This can cause problem with qemu-kvm
+    purge_all_packages: true
+
+    ceph_packages:
+      - ceph
+      - ceph-common
+      - ceph-fs-common
+      - ceph-fuse
+      - ceph-mds
+      - ceph-release
+      - ceph-radosgw
+      - calamari-server
+
+    ceph_remaining_packages:
+      - libcephfs1
+      - libcephfs2
+      - librados2
+      - libradosstriper1
+      - librbd1
+      - python-cephfs
+      - python-rados
+      - python-rbd
+
+  hosts:
+    - "{{ mon_group_name|default('mons') }}"
+    - "{{ osd_group_name|default('osds') }}"
+    - "{{ mds_group_name|default('mdss') }}"
+    - "{{ rgw_group_name|default('rgws') }}"
+    - "{{ rbdmirror_group_name|default('rbdmirrors') }}"
+    - "{{ nfs_group_name|default('nfss') }}"
+    - "{{ client_group_name|default('clients') }}"
+
+  gather_facts: false # Already gathered previously
+
+  become: true
+
+  handlers:
+  - name: remove data
+    file:
+     path: /var/lib/ceph
+     state: absent
+
+  tasks:
+
+  - name: purge ceph packages with yum
+    yum:
+      name: "{{ item }}"
+      state: absent
+    with_items: "{{ ceph_packages }}"
+    when: ansible_pkg_mgr == 'yum'
+
+  - name: purge ceph packages with dnf
+    dnf:
+      name: "{{ item }}"
+      state: absent
+    with_items: "{{ ceph_packages }}"
+    when: ansible_pkg_mgr == 'dnf'
+
+  - name: purge ceph packages with apt
+    apt:
+      name: "{{ item }}"
+      state: absent
+    with_items: "{{ ceph_packages }}"
+    when: ansible_pkg_mgr == 'apt'
+
+  - name: purge remaining ceph packages with yum
+    yum:
+      name: "{{ item }}"
+      state: absent
+    with_items: "{{ ceph_remaining_packages }}"
+    when:
+      - ansible_pkg_mgr == 'yum'
+      - purge_all_packages == true
+
+  - name: purge remaining ceph packages with dnf
+    dnf:
+      name: "{{ item }}"
+      state: absent
+    with_items: "{{ ceph_remaining_packages }}"
+    when:
+      - ansible_pkg_mgr == 'dnf'
+      - purge_all_packages == true
+
+  - name: purge remaining ceph packages with apt
+    apt:
+      name: "{{ item }}"
+      state: absent
+    with_items: "{{ ceph_remaining_packages }}"
+    when:
+      - ansible_pkg_mgr == 'apt'
+      - purge_all_packages == true
+
+  - name: remove config
+    file:
+     path: /etc/ceph
+     state: absent
+
+  - name: remove logs
+    file:
+     path: /var/log/ceph
+     state: absent
+
+  - name: request data removal
+    local_action: shell echo requesting data removal
+    become: false
+    notify:
+      - remove data
+
+  - name: purge dnf cache
+    command: dnf clean all
+    when: ansible_pkg_mgr == 'dnf'
+
+  - name: purge rpm cache in /tmp
+    file:
+      path: /tmp/rh-storage-repo
+      state: absent
+
+  - name: clean apt
+    shell: apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    when: ansible_pkg_mgr == 'apt'
+
+  - name: purge rh_storage.repo file in /etc/yum.repos.d
+    file:
+      path: /etc/yum.repos.d/rh_storage.repo
+      state: absent
+    when: ansible_os_family == 'RedHat'
+
+  - name: check for anything running ceph
+    command: "ps -u ceph -U ceph"
+    register: check_for_running_ceph
+    failed_when: check_for_running_ceph.rc == 0
+
+
+- name: purge fetch directory
+
+  hosts:
+    - localhost
+
+  gather_facts: false
+
+  tasks:
+
+  - name: set fetch_directory value if not set
+    set_fact:
+      fetch_directory: "fetch/"
+    when: fetch_directory is not defined
+
+  - name: purge fetch directory for localhost
+    file:
+      path: "{{ fetch_directory }}"
+      state: absent

@@ -1,0 +1,103 @@
+---
+# For openstack VMs modify the mount point below depending on if the Openstack
+# VM deploy tool defaults to mounting ephemeral disks
+- name: umount ceph disk (if on openstack)
+  mount:
+    name: /mnt
+    src: /dev/vdb
+    fstype: ext3
+    state: unmounted
+  when: ceph_docker_on_openstack
+
+- name: verify if the disk was already prepared
+  shell: "lsblk -o PARTLABEL {{ item }} | grep -sq 'ceph'"
+  failed_when: false
+  always_run: true
+  with_items: "{{ ceph_osd_docker_devices }}"
+  register: osd_prepared
+
+# use shell rather than docker module
+# to ensure osd disk prepare finishes before
+# starting the next task
+- name: prepare ceph osd disk
+  shell: |
+    docker run --net=host \
+    --pid=host \
+    --privileged=true \
+    --name="ceph-osd-prepare-{{ ansible_hostname }}-dev{{ item.0 | regex_replace('/', '') }}" \
+    -v /etc/ceph:/etc/ceph \
+    -v /var/lib/ceph/:/var/lib/ceph/ \
+    -v /dev:/dev \
+    -v /etc/localtime:/etc/localtime:ro \
+    -e "OSD_DEVICE={{ item.0 }}" \
+    -e "OSD_JOURNAL_UUID=$(python -c "import uuid; print uuid.uuid5(uuid.NAMESPACE_DNS, '{{ ansible_machine_id }}{{ item.0 }}')")" \
+    -e CEPH_DAEMON=OSD_CEPH_DISK_PREPARE \
+    {{ ceph_osd_docker_prepare_env }} \
+    "{{ ceph_docker_registry }}/{{ ceph_docker_image }}:{{ ceph_docker_image_tag }}"
+  with_together:
+    - "{{ ceph_osd_docker_devices }}"
+    - "{{ osd_prepared.results }}"
+  when:
+    - item.1.get("rc", 0) != 0
+    - ceph_osd_docker_prepare_env is defined
+    - not osd_containerized_deployment_with_kv
+
+- name: prepare ceph osd disk with kv_store
+  shell: |
+    docker run  --net=host   \
+    --pid=host \
+    --privileged=true \
+    --name="ceph-osd-prepare-{{ ansible_hostname }}-dev-{{ item.0 | regex_replace('/', '') }}" \
+    -v /dev:/dev \
+    -v /etc/localtime:/etc/localtime:ro \
+    -e "OSD_DEVICE={{ item.0 }}" \
+    -e "OSD_JOURNAL_UUID=$(python -c "import uuid; print uuid.uuid5(uuid.NAMESPACE_DNS, '{{ ansible_machine_id }}{{ item.0 }}')")" \
+    -e "{{ ceph_osd_docker_prepare_env }}" \
+    -e CEPH_DAEMON=OSD_CEPH_DISK_PREPARE \
+    -e KV_TYPE={{kv_type}} \
+    -e KV_IP={{kv_endpoint}} \
+    -e KV_PORT={{kv_port}} \
+    {{ ceph_osd_docker_prepare_env }} \
+    "{{ ceph_docker_registry }}/{{ ceph_docker_image }}:{{ ceph_docker_image_tag }}" \
+  with_together:
+    - "{{ ceph_osd_docker_devices }}"
+    - "{{ osd_prepared.results }}"
+  when:
+    - item.1.get("rc", 0) != 0
+    - ceph_osd_docker_prepare_env is defined
+    - osd_containerized_deployment_with_kv
+
+- name: generate ceph osd docker run script
+  become: true
+  template:
+    src: "{{ role_path }}/templates/ceph-osd-run.sh.j2"
+    dest: "{{ ceph_osd_docker_run_script_path }}/ceph-osd-run.sh"
+    owner: "root"
+    group: "root"
+    mode: "0744"
+
+- name: generate systemd unit file
+  become: true
+  template:
+    src: "{{ role_path }}/templates/ceph-osd.service.j2"
+    dest: /etc/systemd/system/ceph-osd@.service
+    owner: "root"
+    group: "root"
+    mode: "0644"
+
+- name: enable systemd unit file for osd instance
+  shell: systemctl enable ceph-osd@{{ item | basename }}.service
+  changed_when: false
+  with_items: "{{ ceph_osd_docker_devices }}"
+
+- name: reload systemd unit files
+  shell: systemctl daemon-reload
+  changed_when: false
+
+- name: systemd start osd container
+  service:
+    name: ceph-osd@{{ item | basename }}
+    state: started
+    enabled: yes
+  changed_when: false
+  with_items: "{{ ceph_osd_docker_devices }}"
