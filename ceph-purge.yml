@@ -1,0 +1,7 @@
+---
+- hosts:
+  - osds
+  - mons 
+  #gather_facts: false
+  roles:
+  - ceph-purge

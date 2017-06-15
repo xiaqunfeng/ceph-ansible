@@ -1,0 +1,6 @@
+---
+- include: ./firewall-selinux-stop-on-centos.yml
+  when: ansible_os_family == 'RedHat'
+
+- include: ./firewall-selinux-stop-on-ubuntu.yml
+  when: ansible_os_family == 'Debian'

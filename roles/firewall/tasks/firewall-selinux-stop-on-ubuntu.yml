@@ -1,0 +1,6 @@
+---
+- name: ubuntu stop firewall
+  shell: sudo firewall-cmd --zone=public --add-port=6789/tcp --permanent
+
+- name: ubuntu stop selinux
+  shell: sudo setenforce 0

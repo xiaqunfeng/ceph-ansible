@@ -1,0 +1,17 @@
+---
+- name: kill all progress of ceph
+  shell: systemctl stop ceph.target
+
+- name: umount all osd
+  shell: umount -f {{ item }}
+  with_items:
+    - "{{ devices }}"
+    #- "{{ raw_journal_devices }}"
+
+- shell: sleep 3
+
+- name: delete all in /etc/ceph/
+  shell: rm -rf /etc/ceph/*
+
+- name: delete all in /var/lib/ceph/
+  shell: rm -rf /var/lib/ceph
