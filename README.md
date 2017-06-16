@@ -12,6 +12,10 @@ ansible 2.3.0.0
 ```
 原先的README.md改名为README-origin.md
 
+## 修改roles
+### ceph-osd
+在原有基础上进行了少量修改，使之可以更好的支持分区部署osd。
+
 ## 新增roles
 ### 1、ceph-install
 当选择ceph_custom 方式安装的时候会执行该role。在这里用于离线安装，在内网的某一台机器上搭建一个源站，然后通过yum的方式安装ceph。group/all.yml中需要开启的配置如下：
@@ -37,6 +41,7 @@ public_network: 172.20.2.0/24
 - umount 所有osd挂载的磁盘
 - 删除 /etc/ceph/ 下所有文件
 - 删除 /var/lib/ceph/ 下所有文件
+当前目录下单独提供了一个yml文件 `ceph-purge.yml` 可供调用
 
 ### 4、parted-create
 给磁盘分区，用于ceph的部署
