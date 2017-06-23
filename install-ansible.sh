@@ -19,15 +19,32 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
-if [[ ! -x $(which lsb_release 2>/dev/null) ]]; then
-  echo "ERROR: lsb_release is not installed"
-  echo "Cannot evaluate the platform"
-  echo "Please install lsb_release and retry"
-  echo "Red Hat based Systems : yum install redhat-lsb-core"
-  echo "Debian based Systems : apt-get install lsb-release"
-  exit 1
-fi
+#if [[ ! -x $(which lsb_release 2>/dev/null) ]]; then
+#  echo "ERROR: lsb_release is not installed"
+#  echo "Cannot evaluate the platform"
+#  echo "Please install lsb_release and retry"
+#  echo "Red Hat based Systems : yum install redhat-lsb-core"
+#  echo "Debian based Systems : apt-get install lsb-release"
+#  exit 1
+#fi
  
+if [[ ! -x $(which lsb_release 2>/dev/null) ]]; then
+  echo "lsb_release is not installed"
+  echo "*** BEGIN install lsb_release ***"
+  if test -f /etc/redhat-release ; then
+    yum install redhat-lsb-core -y
+  elif type apt-get > /dev/null 2>&1 ; then
+    apt-get install lsb-release -y
+  else
+    echo "ERROR: Package Installer could not be determined"
+    exit 1
+  fi
+  if [[ ! -x $(which lsb_release 2>/dev/null) ]]; then
+    echo "lsb_release still not installed!!"
+    exit 1
+  fi
+  echo "*** LSB_RELEASE installed successfully ***"
+fi
 
 # GET OS VENDOR
 os_VENDOR=$(lsb_release -i -s)
