@@ -31,9 +31,11 @@ public_network: 172.20.2.0/24
 
 ```
 其中`http://172.20.2.158/ceph-kraken-repos` 为我自己配置的内网仓库。
+如果是非`custom` 模式的话在site.yml 中将其注释掉
 
 ### 2、firewalld
 关闭防火墙和selinux，在ceph部署前就执行此操作，防止在部署过程中因为该步骤未操作引发的一些问题。
+默认在site.yml中开启
 
 ### 3、ceph-purge
 清除整个集群的信息，包括以下几件事情

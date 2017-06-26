@@ -43,7 +43,13 @@
   gather_facts: false
   become: True
   roles:
-  - ceph-install
+  - firewall
+
+#- hosts: osds
+#  gather_facts: false
+#  become: True
+#  roles:
+#  - ceph-install
 
 - hosts: mons
   gather_facts: false
@@ -63,12 +69,12 @@
   roles:
   - ceph-osd
 
-#- hosts: rgws
-#  gather_facts: false
-#  become: True
-#  roles:
-#  - ceph-rgw
-#
+- hosts: rgws
+  gather_facts: false
+  become: True
+  roles:
+  - ceph-rgw
+
 #- hosts: restapis
 #  gather_facts: false
 #  become: True
