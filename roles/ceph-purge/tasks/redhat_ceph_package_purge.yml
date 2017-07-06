@@ -1,0 +1,20 @@
+---
+- name: purge ceph package
+  yum:
+    name: ceph
+    state: absent
+
+- name: remove librbd1
+  yum:
+    name: librbd1
+    state: absent
+
+- name: remove librgw2
+  yum:
+    name: librgw2
+    state: absent
+
+- name: remove librados2
+  yum:
+    name: librados2
+    state: absent

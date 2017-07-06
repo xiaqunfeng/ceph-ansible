@@ -408,3 +408,8 @@ public_network: 172.20.2.0/24
 # do not ever change this here
 #rolling_update: false
 
+
+###########
+# CUSTOM #
+###########
+#ceph_pkg_purge: true

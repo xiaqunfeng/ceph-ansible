@@ -1,1 +1,3 @@
 ---
+
+ceph_pkg_purge: false

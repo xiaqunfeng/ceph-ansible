@@ -3,6 +3,8 @@
 ## 原项目地址和版本
 github: https://github.com/ceph/ceph-ansible
 release: 2.2.1
+
+安装完后版本信息：
 ```
 # ansible --version
 ansible 2.3.0.0
@@ -35,20 +37,26 @@ public_network: 172.20.2.0/24
 ```
 其中`http://172.20.2.158/ceph-kraken-repos` 为我自己配置的内网仓库。
 
-如果是非`custom` 模式的话在site.yml 中将该role对应的task注释掉
+>只针对 custom 模式下使用，如果是非`custom` 模式的话在site.yml 中将该role对应的task注释掉
 
-### 2、firewalld
-关闭防火墙和selinux，在ceph部署前就执行此操作，防止在部署过程中因为该步骤未操作引发的一些问题。
-默认在site.yml中开启
-
-### 3、ceph-purge
+### 2、ceph-purge
 清除整个集群的信息，包括以下几件事情
 - 停止所有ceph相关进程
 - umount 所有osd挂载的磁盘
 - 删除 /etc/ceph/ 下所有文件
 - 删除 /var/lib/ceph/ 下所有文件
 
-当前目录下单独提供了一个yml文件 `ceph-purge.yml` 可供调用
+**新增变量**: `ceph_pkg_purge`，默认为 `false`。可在group_vars/all.yml 中开启。
+**功能**：当开启时，在purge ceph集群数据完成后，会purge 掉 ceph package，以及ceph 安装版本所对应的相关依赖包，以便环境在下次安装不同版本的 ceph 时不会有问题。
+
+>该变量当前只针对 centos 系统实现
+
+**使用方法**：
+当前目录下单独提供了一个yml文件 `ceph-purge.yml` 可供直接调用
+
+### 3、firewalld
+关闭防火墙和selinux，在ceph部署前就执行此操作，防止在部署过程中因为该步骤未操作引发的一些问题。
+默认在site.yml中开启
 
 ### 4、parted-create
 给磁盘分区，用于ceph的部署

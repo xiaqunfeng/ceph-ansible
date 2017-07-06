@@ -1,6 +1,13 @@
 ---
-- name: kill all progress of ceph
-  shell: systemctl stop ceph.target
+- name: kill all ceph daemon
+  shell: systemctl stop ceph\*.service ceph\*.target
+
+- name: sleep for process down
+  shell: sleep 5
+
+- name: kill progress related to ceph
+  shell: ps aux|grep ceph | grep -v ceph-purge | grep -v grep |awk '{print $2}'|xargs kill -9
+  ignore_errors: yes
 
 - name: sleep for process down
   shell: sleep 5
@@ -10,9 +17,15 @@
   with_items:
     - "{{ devices }}"
     #- "{{ raw_journal_devices }}"
+  ignore_errors: yes
 
 - name: delete all in /etc/ceph/
   shell: rm -rf /etc/ceph/*
 
 - name: delete all in /var/lib/ceph/
   shell: rm -rf /var/lib/ceph
+
+# purge ceph package and dependance
+- name: purge ceph package and dependent package
+  include: redhat_ceph_package_purge.yml
+  when: ceph_pkg_purge
