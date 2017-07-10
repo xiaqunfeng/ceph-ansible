@@ -47,6 +47,7 @@ public_network: 172.20.2.0/24
 - 删除 /var/lib/ceph/ 下所有文件
 
 **新增变量**: `ceph_pkg_purge`，默认为 `false`。可在group_vars/all.yml 中开启。
+
 **功能**：当开启时，在purge ceph集群数据完成后，会purge 掉 ceph package，以及ceph 安装版本所对应的相关依赖包，以便环境在下次安装不同版本的 ceph 时不会有问题。
 
 >该变量当前只针对 centos 系统实现
