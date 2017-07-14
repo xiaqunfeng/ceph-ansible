@@ -3,7 +3,8 @@ import sys
 import os
 import json
 cmd = '''
-ceph pg dump | awk ' /^PG_STAT/ { col=1; while($col!="UP") {col++}; col++ } /^[0-9a-f]+\.[0-9a-f]+/ {print $1,$col}'
+#ceph pg dump | awk ' /^PG_STAT/ { col=1; while($col!="UP") {col++}; col++ } /^[0-9a-f]+\.[0-9a-f]+/ {print $1,$col}'
+ceph pg dump | awk ' /^pg_stat/ { col=1; while($col!="up") {col++}; col++ } /^[0-9a-f]+\.[0-9a-f]+/ {print $1,$col}'
 '''
 body = os.popen(cmd).read()
 SUM = {}

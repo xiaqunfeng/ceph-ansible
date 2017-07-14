@@ -1,6 +1,9 @@
 # README
+
 该项目是在原有ceph-ansible项目基础上根据自己的需要进行的一些修改。
+
 ## 原项目地址和版本
+
 github: https://github.com/ceph/ceph-ansible
 release: 2.2.1
 
@@ -20,6 +23,7 @@ ansible 2.3.0.0
 
 ### install-ansible.sh
 根据系统环境自动安装`lsb_release`，不必手动再安装，并校验是否安装完成。
+
 
 ## 新增roles
 ### 1、ceph-install
@@ -66,3 +70,54 @@ TODO
 ### 5、parted-rm
 删除所有磁盘的分区
 TODO
+
+## 文件夹tools
+
+新增一些小工具
+
+- pg_num-set.sh: 设置集群pg数量
+
+- pg-osd.py: 输出每个osd在每个pool中的pg数量，以表格形式呈现
+
+```
+# ./pg-osd.py
+dumped all in format plain
+pool  : 0      1      10     2      3      4      5      6      7      8      9      | SUM
+------------------------------------------------------------------------------------------------
+osd.0   64     8      8      8      8      8      8      8      8      8      8      | 144
+osd.1   64     8      8      8      8      8      8      8      8      8      8      | 144
+osd.2   64     8      8      8      8      8      8      8      8      8      8      | 144
+
+------------------------------------------------------------------------------------------------
+SUM   : 192    24     24     24     24     24     24     24     24     24     24     |
+```
+
+- cpu-top.sh
+
+查看cpu的拓扑结构
+
+```
+# sh cpu-top.sh
+===== CPU Topology Table =====
+
++--------------+---------+-----------+
+| Processor ID | Core ID | Socket ID |
++--------------+---------+-----------+
+| 0            | 0       | 0         |
++--------------+---------+-----------+
+| 1            | 1       | 0         |
++--------------+---------+-----------+
+
+Socket 0: 0 1
+
+===== CPU Info Summary =====
+
+Logical processors: 2
+Physical socket: 1
+Siblings in one socket:  2
+Cores in one socket:  2
+Cores in total: 2
+Hyper-Threading: off
+
+===== END =====
+```
