@@ -4,6 +4,9 @@
     name: ceph
     state: absent
 
+- name: remove ceph_stable.repo
+  command: rm -f /etc/yum.repos.d/ceph_stable.repo
+
 - name: remove librbd1
   yum:
     name: librbd1
