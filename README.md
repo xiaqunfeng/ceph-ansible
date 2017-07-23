@@ -19,6 +19,7 @@ ansible 2.3.0.0
 
 ## 修改
 ### ceph-osd role
+
 在原有基础上进行了少量修改，使之可以更好的支持分区部署osd。
 
 ### install-ansible.sh
@@ -27,6 +28,7 @@ ansible 2.3.0.0
 
 ## 新增roles
 ### 1、ceph-install
+
 当选择 `ceph_custom` 方式安装的时候才使用该role。在这里用于离线安装，在内网的某一台机器上搭建一个源站，然后通过yum的方式安装ceph。group/all.yml中需要开启的配置如下：
 ```
 ceph_origin: 'upstream'
@@ -44,6 +46,7 @@ public_network: 172.20.2.0/24
 >只针对 custom 模式下使用，如果是非`custom` 模式的话在site.yml 中将该role对应的task注释掉
 
 ### 2、ceph-purge
+
 清除整个集群的信息，包括以下几件事情
 - 停止所有ceph相关进程
 - umount 所有osd挂载的磁盘
@@ -60,14 +63,49 @@ public_network: 172.20.2.0/24
 当前目录下单独提供了一个yml文件 `ceph-purge.yml` 可供直接调用
 
 ### 3、firewalld
+
 关闭防火墙和selinux，在ceph部署前就执行此操作，防止在部署过程中因为该步骤未操作引发的一些问题。
 默认在site.yml中开启
 
-### 4、parted-create
-给磁盘分区，用于ceph的部署
-TODO
+### 4、parted-dev
+
+功能：给磁盘分区，当前支持最多给一次磁盘分四个区
+
+使用方法：
+
+1、修改 `group_vars/osds.yml` 
+
+```
+unparted_devices:
+  - /dev/vdd
+  #- /dev/vdc
+
+parted_num: 4
+first_part_start: 1MB
+first_part_end: 1GiB
+second_part_start: 1GiB
+second_part_end: 2GiB
+third_part_start: 2GiB
+third_part_end: 5GiB
+fourth_part_start: 5GiB
+fourth_part_end: 20GiB
+# 1GiB = 1024MB, 1GB = 1000MB
+```
+
+- unparted_devices: 需要分区的磁盘名称
+
+- parted_num: 需要几个区
+
+- XXX_part_start: 第XXX个分区的起始位置
+
+- XXX_part_end: 第XXX个分区的结束位置
+
+2、调用yml文件执行
+
+这里提供了一个单独的yml 文件：`parted-dev.yml`
 
 ### 5、parted-rm
+
 删除所有磁盘的分区
 TODO
 
