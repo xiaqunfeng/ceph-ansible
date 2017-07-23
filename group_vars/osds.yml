@@ -200,3 +200,19 @@ raw_journal_devices:
 #ceph_osd_docker_extra_env: -e CLUSTER={{ cluster }} -e CEPH_DAEMON=OSD_CEPH_DISK_ACTIVATE -e OSD_JOURNAL_SIZE={{ journal_size }}
 #ceph_osd_docker_run_script_path: "/usr/share" # script called by systemd to run the docker command
 
+# var below is for rolw parted-dev and rm-parted
+# when use parted devices, the most num supoort is 4
+unparted_devices:
+  - /dev/vdd
+  #- /dev/vdc
+
+parted_num: 4
+first_part_start: 1MB
+first_part_end: 1GiB
+second_part_start: 1GiB
+second_part_end: 2GiB
+third_part_start: 2GiB
+third_part_end: 5GiB
+fourth_part_start: 5GiB
+fourth_part_end: 20GiB
+# 1GiB = 1024MB, 1GB = 1000MB

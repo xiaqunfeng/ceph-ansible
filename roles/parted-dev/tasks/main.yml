@@ -1,0 +1,49 @@
+---
+- name: first partition
+  parted: 
+    #device: "{{ item }}"
+    device: /dev/vdd
+    name: data
+    state: present
+    part_start: "{{ first_part_start }}"
+    part_end: "{{ first_part_end }}"
+  with_together: "{{ unparted_devices }}"
+  when: 
+    - parted_num >= 1
+
+- name: second partition
+  parted: 
+    #device: "{{ item }}"
+    device: /dev/vdd
+    name: wal
+    state: present
+    part_start: "{{ second_part_start }}"
+    part_end: "{{ second_part_end }}"
+  with_together: "{{ unparted_devices }}"
+  when: 
+  - parted_num >= 2
+
+- name: third partition
+  parted: 
+    #device: "{{ item }}"
+    device: /dev/vdd
+    name: db
+    state: present
+    part_start: "{{ third_part_start }}"
+    part_end: "{{ third_part_end }}"
+  with_together: "{{ unparted_devices }}"
+  when: 
+  - parted_num >= 3
+
+- name: fourth partition
+  parted: 
+    #device: "{{ item }}"
+    device: /dev/vdd
+    name: block
+    state: present
+    part_start: "{{ fourth_part_start }}"
+    part_end: "{{ fourth_part_end }}"
+  with_together: "{{ unparted_devices }}"
+  when: 
+  - parted_num >= 4
+

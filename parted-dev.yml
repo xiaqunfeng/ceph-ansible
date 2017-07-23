@@ -1,0 +1,4 @@
+---
+- hosts: osds
+  roles:
+  - parted-dev
