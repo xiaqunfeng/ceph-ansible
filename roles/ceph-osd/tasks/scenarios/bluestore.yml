@@ -35,4 +35,16 @@
     - bluestore
     - not osd_auto_discovery
 
+- name: manually prepare bluestore osd disk(s) with one partition of devices
+  command: ceph-disk prepare --bluestore --cluster "{{ cluster }}" "{{ item.2 }}"
+  with_together:
+    - "{{ parted_results.results }}"
+    - "{{ ispartition_results.results }}"
+    - "{{ devices }}"
+  when:
+    - not item.1.get("skipped")
+    - item.1.rc == 0
+    - bluestore
+    - not osd_auto_discovery
+
 - include: ../activate_osds.yml
