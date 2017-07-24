@@ -1,45 +1,113 @@
 ---
+- name: check if the input unparted_devices is a partition
+  shell: "readlink -f {{ item }} | egrep '/dev/([hsv]d[a-z]{1,2}|cciss/c[0-9]d[0-9]p|nvme[0-9]n[0-9]p)[0-9]{1,2}$'"
+  with_items: "{{ unparted_devices }}"
+  changed_when: false
+  failed_when: false
+  always_run: true
+  register: check_ispartition_results
+
+#- name: print ispartition results
+#  debug: 
+#    msg: "{{ check_ispartition_results }}"
+
 - name: first partition
   parted: 
-    device: "{{ item }}"
+    device: "{{ item.1 }}"
     name: data
     state: present
     part_start: "{{ first_part_start }}"
     part_end: "{{ first_part_end }}"
-  with_items: "{{ unparted_devices }}"
+  with_together: 
+    - "{{ check_ispartition_results.results }}"
+    - "{{ unparted_devices }}"
   when: 
     - parted_num >= 1
+    - item.0.get("rc", 0) != 0
 
 - name: second partition
   parted: 
-    device: "{{ item }}"
-    name: wal
+    device: "{{ item.1 }}"
+    name: data
     state: present
     part_start: "{{ second_part_start }}"
     part_end: "{{ second_part_end }}"
-  with_items: "{{ unparted_devices }}"
+  with_together: 
+    - "{{ check_ispartition_results.results }}"
+    - "{{ unparted_devices }}"
   when: 
-  - parted_num >= 2
+    - parted_num >= 2
+    - item.0.get("rc", 0) != 0
 
 - name: third partition
   parted: 
-    device: "{{ item }}"
-    name: db
+    device: "{{ item.1 }}"
+    name: data
     state: present
     part_start: "{{ third_part_start }}"
     part_end: "{{ third_part_end }}"
-  with_items: "{{ unparted_devices }}"
+  with_together: 
+    - "{{ check_ispartition_results.results }}"
+    - "{{ unparted_devices }}"
   when: 
-  - parted_num >= 3
+    - parted_num >= 3
+    - item.0.get("rc", 0) != 0
 
 - name: fourth partition
   parted: 
-    device: "{{ item }}"
-    name: block
+    device: "{{ item.1 }}"
+    name: data
     state: present
     part_start: "{{ fourth_part_start }}"
     part_end: "{{ fourth_part_end }}"
-  with_items: "{{ unparted_devices }}"
+  with_together: 
+    - "{{ check_ispartition_results.results }}"
+    - "{{ unparted_devices }}"
   when: 
-  - parted_num >= 4
+    - parted_num >= 4
+    - item.0.get("rc", 0) != 0
 
+#- name: first partition
+#  parted: 
+#    device: "{{ item }}"
+#    name: data
+#    state: present
+#    part_start: "{{ first_part_start }}"
+#    part_end: "{{ first_part_end }}"
+#  with_items: "{{ unparted_devices }}"
+#  when: 
+#    - parted_num >= 1
+#
+#- name: second partition
+#  parted: 
+#    device: "{{ item }}"
+#    name: wal
+#    state: present
+#    part_start: "{{ second_part_start }}"
+#    part_end: "{{ second_part_end }}"
+#  with_items: "{{ unparted_devices }}"
+#  when: 
+#  - parted_num >= 2
+#
+#- name: third partition
+#  parted: 
+#    device: "{{ item }}"
+#    name: db
+#    state: present
+#    part_start: "{{ third_part_start }}"
+#    part_end: "{{ third_part_end }}"
+#  with_items: "{{ unparted_devices }}"
+#  when: 
+#  - parted_num >= 3
+#
+#- name: fourth partition
+#  parted: 
+#    device: "{{ item }}"
+#    name: block
+#    state: present
+#    part_start: "{{ fourth_part_start }}"
+#    part_end: "{{ fourth_part_end }}"
+#  with_items: "{{ unparted_devices }}"
+#  when: 
+#  - parted_num >= 4
+#

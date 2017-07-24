@@ -213,10 +213,10 @@ first_part_start: 1MB
 first_part_end: 1GiB
 
 second_part_start: 1GiB
-second_part_end: 2GiB
+second_part_end: 11GiB
 
-third_part_start: 2GiB
-third_part_end: 5GiB
+third_part_start: 11GiB
+third_part_end: 21GiB
 
-fourth_part_start: 5GiB
-fourth_part_end: 20GiB
+fourth_part_start: 21GiB
+fourth_part_end: 100%
