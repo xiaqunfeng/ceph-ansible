@@ -29,7 +29,7 @@ ansible 2.3.0.0
 ## 新增roles
 ### 1、ceph-install
 
-当选择 `ceph_custom` 方式安装的时候才使用该role。在这里用于离线安装，在内网的某一台机器上搭建一个源站，然后通过yum的方式安装ceph。group/all.yml中需要开启的配置如下：
+功能：当选择 `ceph_custom` 方式安装的时候才使用该role。在这里用于离线安装，在内网的某一台机器上搭建一个源站，然后通过yum的方式安装ceph。group/all.yml中需要开启的配置如下：
 ```
 ceph_origin: 'upstream'
 ...
@@ -45,9 +45,11 @@ public_network: 172.20.2.0/24
 
 >只针对 custom 模式下使用，如果是非`custom` 模式的话在site.yml 中将该role对应的task注释掉
 
+>note：如果是安装bluestore的话，还需要修改配置项：#osd_objectstore: filestore，将其值改为 bluestore
+
 ### 2、ceph-purge
 
-清除整个集群的信息，包括以下几件事情
+功能：清除整个集群的信息，包括以下几件事情
 - 停止所有ceph相关进程
 - umount 所有osd挂载的磁盘
 - 删除 /etc/ceph/ 下所有文件
@@ -64,12 +66,13 @@ public_network: 172.20.2.0/24
 
 ### 3、firewalld
 
-关闭防火墙和selinux，在ceph部署前就执行此操作，防止在部署过程中因为该步骤未操作引发的一些问题。
+功能：关闭防火墙和selinux，在ceph部署前就执行此操作，防止在部署过程中因为该步骤未操作引发的一些问题。
+
 默认在site.yml中开启
 
 ### 4、parted-dev
 
-功能：给磁盘分区，当前支持最多给一次磁盘分四个区
+功能：给磁盘分区，当前支持最多一次给磁盘分四个区
 
 使用方法：
 
@@ -78,31 +81,41 @@ public_network: 172.20.2.0/24
 ```
 unparted_devices:
   - /dev/vdd
-  #- /dev/vdc
+  - /dev/vdc
 
 parted_num: 4
+
+
+parted_num: 4
+
 first_part_start: 1MB
 first_part_end: 1GiB
+
 second_part_start: 1GiB
-second_part_end: 2GiB
-third_part_start: 2GiB
-third_part_end: 5GiB
-fourth_part_start: 5GiB
-fourth_part_end: 20GiB
-# 1GiB = 1024MB, 1GB = 1000MB
+second_part_end: 11GiB
+
+third_part_start: 11GiB
+third_part_end: 21GiB
+
+fourth_part_start: 21GiB
+fourth_part_end: 100%
 ```
 
-- unparted_devices: 需要分区的磁盘名称
+- unparted_devices: 需要分区的磁盘名列表
 
-- parted_num: 需要几个区
+- parted_num: 需要分几个区
 
 - XXX_part_start: 第XXX个分区的起始位置
 
 - XXX_part_end: 第XXX个分区的结束位置
 
+> note: 1GiB = 1024MiB, 1GB = 1000MB = 1000 * 1000KB = 953MiB
+
 2、调用yml文件执行
 
 这里提供了一个单独的yml 文件：`parted-dev.yml`
+
+>该role会先检查输入的磁盘名是否符合规则，不符合的话会skip
 
 ### 5、parted-rm
 
