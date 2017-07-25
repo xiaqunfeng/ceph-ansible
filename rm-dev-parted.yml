@@ -1,0 +1,30 @@
+---
+- hosts: ceph0
+  tasks:
+    - name: Read device information (always use unit when probing)
+      parted: device=/dev/vdc unit=MiB
+      register: vdc_info
+
+#    - name: print vdc_info
+#      debug:
+#        msg: "{{ vdc_info }}"
+#
+#    - name: print vdc_info.partitions
+#      debug:
+#        msg: "{{ vdc_info.partitions }}"
+#
+#    - name: print vdc_info.partitions.num
+#      debug:
+#        msg: "{{ item.num }}"
+#      with_items:
+#        - "{{ vdc_info.partitions }}"
+
+    - name: Remove all partitions from disk
+      parted:
+        device: /dev/vdc
+        number: "{{ item.num }}"
+        state: absent
+      with_items:
+        - "{{ vdc_info.partitions }}"
+#  roles:
+#  - parted-dev
