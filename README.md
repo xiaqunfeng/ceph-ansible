@@ -20,9 +20,12 @@ ansible 2.3.0.0
 ## 修改
 ### ceph-osd role
 
-在原有基础上进行了少量修改，使之可以更好的支持分区部署osd。
+1、在原有基础上进行了少量修改，使之可以更好的支持分区部署osd。
+
+2、修改文件`scenarios/bluestore.yml`，在bluestore场景下也可以接受一个分区作为磁盘输入，部署OSD。
 
 ### install-ansible.sh
+
 根据系统环境自动安装`lsb_release`，不必手动再安装，并校验是否安装完成。
 
 
@@ -49,7 +52,8 @@ public_network: 172.20.2.0/24
 
 ### 2、ceph-purge
 
-功能：清除整个集群的信息，包括以下几件事情
+**功能**：清除整个集群的信息，包括以下几件事情
+
 - 停止所有ceph相关进程
 - umount 所有osd挂载的磁盘
 - 删除 /etc/ceph/ 下所有文件
@@ -72,9 +76,9 @@ public_network: 172.20.2.0/24
 
 ### 4、parted-dev
 
-功能：给磁盘分区，当前支持最多一次给磁盘分四个区
+**功能**：给磁盘分区，当前支持最多一次给磁盘分四个区
 
-使用方法：
+**使用方法**：
 
 1、修改 `group_vars/osds.yml` 
 
@@ -82,9 +86,6 @@ public_network: 172.20.2.0/24
 unparted_devices:
   - /dev/vdd
   - /dev/vdc
-
-parted_num: 4
-
 
 parted_num: 4
 
