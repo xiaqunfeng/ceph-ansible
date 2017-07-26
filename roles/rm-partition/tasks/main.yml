@@ -1,0 +1,53 @@
+---
+- name: copy rm-partition.sh to /tmp
+  template:
+    src: templates/rm-partition.sh.j2
+    dest: /tmp/rm-partition.sh
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: remove partitions of parted_devices
+  shell: sh rm-partition.sh {{ item }}
+  with_items: "{{ parted_devices }}"
+  args:
+    chdir: /tmp/
+
+- name: delete rm-partition.sh in /tmp/
+  file:
+    path: /tmp/rm-partition.sh
+    state: absent
+
+
+#- name: Read device information (always use unit when probing)
+#  parted: device={{ item }} unit=MiB
+#  #parted: device=/dev/vdd unit=MiB
+#  with_items: "{{ unparted_devices }}"
+#  register: dev_partition_info
+#
+#- name: print vdc_info
+#  debug: 
+#    msg: "{{ dev_partition_info }}"
+#
+#- name: print partitions
+#  debug:
+#    msg: "{{ item.partitions }}"
+#  with_items:
+#    - "{{ dev_partition_info.results }}"
+#  register: dev_part_info
+#
+#- name: print partition info 
+#  debug:
+#    msg: "{{ item }}"
+#  with_items:
+#    - "{{ dev_part_info }}"
+  
+#- name: Remove all partitions from devices
+#  parted:
+#    device: "{{ item.1 }}"
+#    #device: /dev/vdd 
+#    number: "{{ item.0 }}"
+#    state: absent
+#  with_together:
+#    - "{{ dev_part_info.results }}"
+#    - "{{ unparted_devices }}"

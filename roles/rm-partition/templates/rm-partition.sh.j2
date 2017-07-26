@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# ex: device=/dev/vdc
+device=$1
+
+dev_name=$(echo $device | awk -F '/' '{print $3}')
+echo $dev_name
+
+partition_num=`expr $(cat /proc/partitions | grep $dev_name | wc -l) - 1`
+echo "the partition num of $device is: $partition_num"
+
+for i in $(seq $partition_num -1 1)
+do
+  echo "remove partition $i of $device"
+  `parted -s $device rm $i`
+done
+
+echo "done!"
