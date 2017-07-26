@@ -72,7 +72,7 @@ public_network: 172.20.2.0/24
 
 功能：关闭防火墙和selinux，在ceph部署前就执行此操作，防止在部署过程中因为该步骤未操作引发的一些问题。
 
-默认在site.yml中开启
+默认在 `site.yml` 中开启
 
 ### 4、parted-dev
 
@@ -116,12 +116,40 @@ fourth_part_end: 100%
 
 这里提供了一个单独的yml 文件：`parted-dev.yml`
 
->该role会先检查输入的磁盘名是否符合规则，不符合的话会skip
+```
+ansible-playbook parted-dev.yml
+```
 
-### 5、parted-rm
+>Note：如果输入的磁盘中有名称不符合规则或者输入的是一个分区（如 /dev/vdc1），会skip
 
-删除所有磁盘的分区
-TODO
+### 5、rm-partition
+
+**功能**：删除选定磁盘的所有分区（不管有几个分区，以及分区是否对称，均可完全删除）
+
+**使用方法**：
+
+1、修改 `group_vars/osds.yml` 
+
+```
+# parted_devices is used for role: rm-partition
+parted_devices:
+  - /dev/vdb
+  - /dev/vdc
+```
+
+- parted_devices：需要删除分区的磁盘列表
+
+2、调用yml文件执行
+
+这里提供了一个单独的yml 文件：`rm-partition.yml`
+
+```
+ansible-playbook rm-partition.yml
+```
+
+> Note：如果输入的磁盘中有名称不符合规则或者输入的是一个分区（如 /dev/vdc1），会skip
+
+以上两个role中，注意修改所提供 `.yml` 文件里的 hosts 为自己指定的组或机器
 
 ## 文件夹tools
 
