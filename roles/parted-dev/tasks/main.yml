@@ -4,7 +4,8 @@
   with_items: "{{ unparted_devices }}"
   changed_when: false
   failed_when: false
-  always_run: true
+  #always_run: true
+  check_mode: no
   register: check_ispartition_results
 
 #- name: print ispartition results
