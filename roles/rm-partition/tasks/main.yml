@@ -1,4 +1,13 @@
 ---
+- name: check if the input parted_devices is a partition
+  shell: "readlink -f {{ item }} | egrep '/dev/([hsv]d[a-z]{1,2}|cciss/c[0-9]d[0-9]p|nvme[0-9]n[0-9]p)[0-9]{1,2}$'"
+  with_items: "{{ parted_devices }}"
+  changed_when: false
+  failed_when: false
+  #always_run: true
+  check_mode: no
+  register: check_results
+
 - name: copy rm-partition.sh to /tmp
   template:
     src: templates/rm-partition.sh.j2
@@ -8,10 +17,13 @@
     mode: '0600'
 
 - name: remove partitions of parted_devices
-  shell: sh rm-partition.sh {{ item }}
-  with_items: "{{ parted_devices }}"
+  shell: sh rm-partition.sh {{ item.1 }}
+  with_together: 
+    - "{{ check_results.results }}"
+    - "{{ parted_devices }}"
   args:
     chdir: /tmp/
+  when: item.0.get("rc", 0) != 0
 
 - name: delete rm-partition.sh in /tmp/
   file:
