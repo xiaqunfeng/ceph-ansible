@@ -201,3 +201,14 @@ Hyper-Threading: off
 
 ===== END =====
 ```
+
+- manual-deploy-osd.sh: 手动部署OSD脚本
+
+使用方法：在每台机器上单独执行
+
+只需要修改osd列表和磁盘列表即可，如下：
+
+```
+array_osd=(0 1 2)
+array_dev=('sdb1' 'sdc1' 'sdd1')
+```
