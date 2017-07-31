@@ -206,9 +206,21 @@ Hyper-Threading: off
 
 使用方法：在每台机器上单独执行
 
-只需要修改osd列表和磁盘列表即可，如下：
+只需要修改osd列表和磁盘列表即可(filestore的话还要修改日志盘列表)，如下：
 
 ```
+# osd 和 dev 数组
 array_osd=(0 1 2)
 array_dev=('sdb1' 'sdc1' 'sdd1')
+
+# 存储类型：filestore or bluestore
+storage_type=bluestore
+
+# journal devices数组
+array_journal=('sdb2' 'sdc2' 'sdd2')    # for filestore only
 ```
+
+>注意
+1、部署osd有两种方式，一种是bluestore，一种是filestore，脚本里默认是bluestore，可以通过设置 `storage_type` 开关来打开。
+2、脚本同样适用于ubuntu系统，只需修改最后启动osd的命令即可
+
