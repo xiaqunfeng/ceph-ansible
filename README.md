@@ -155,9 +155,19 @@ ansible-playbook rm-partition.yml
 
 新增一些小工具
 
-- pg_num-set.sh: 设置集群pg数量
+- **pg_num-set.sh**
 
-- pg-osd.py: 输出每个osd在每个pool中的pg数量，以表格形式呈现
+功能：设置集群pg和pgp数量，二者相等
+
+使用姿势：
+
+```
+sh pg_num-set.sh {pg-num}
+```
+
+- **pg-osd.py**
+
+功能：输出每个osd在每个pool中的pg数量，以表格形式呈现
 
 ```
 # ./pg-osd.py
@@ -172,7 +182,7 @@ osd.2   64     8      8      8      8      8      8      8      8      8      8 
 SUM   : 192    24     24     24     24     24     24     24     24     24     24     |
 ```
 
-- cpu-top.sh
+- **cpu-top.sh**
 
 查看cpu的拓扑结构
 
@@ -202,7 +212,9 @@ Hyper-Threading: off
 ===== END =====
 ```
 
-- manual-deploy-osd.sh: 手动部署OSD脚本
+- **manual-deploy-osd.sh**
+
+功能：手动部署OSD脚本
 
 使用方法：在每台机器上单独执行
 
@@ -220,7 +232,7 @@ storage_type=bluestore
 array_journal=('sdb2' 'sdc2' 'sdd2')    # for filestore only
 ```
 
->注意
 1、部署osd有两种方式，一种是bluestore，一种是filestore，脚本里默认是bluestore，可以通过设置 `storage_type` 开关来打开。
+
 2、脚本同样适用于ubuntu系统，只需修改最后启动osd的命令即可
 
