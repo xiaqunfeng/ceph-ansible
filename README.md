@@ -5,6 +5,7 @@
 ## 原项目地址和版本
 
 github: https://github.com/ceph/ceph-ansible
+
 release: 2.2.1
 
 安装完后版本信息：
@@ -15,12 +16,12 @@ ansible 2.3.0.0
   configured module search path = Default w/o overrides
   python version = 2.7.5 (default, Sep 15 2016, 22:37:39) [GCC 4.8.5 20150623 (Red Hat 4.8.5-4)]
 ```
-原先的README.md改名为README-origin.md
+>原先的README.md改名为README-origin.md
 
 ## 修改
 ### ceph-osd role
 
-1、在原有基础上进行了少量修改，使之可以更好的支持分区部署osd。
+1、在原有基础上进行了修改，使之可以更好的支持分区部署osd。
 
 2、修改文件`scenarios/bluestore.yml`，在bluestore场景下也可以接受一个分区作为磁盘输入，部署OSD。
 
@@ -46,9 +47,10 @@ public_network: 172.20.2.0/24
 ```
 其中`http://172.20.2.158/ceph-kraken-repos` 为我自己配置的内网仓库。
 
->只针对 custom 模式下使用，如果是非`custom` 模式的话在site.yml 中将该role对应的task注释掉
+>1、只针对 custom 模式下使用，如果是非`custom` 模式的话在site.yml 中将该role对应的task注释掉
+2、如果是安装bluestore的话，还需要修改配置项：#osd_objectstore: filestore，将其值改为 bluestore
 
->note：如果是安装bluestore的话，还需要修改配置项：#osd_objectstore: filestore，将其值改为 bluestore
+使用场景：离线或内网环境下的ceph集群安装
 
 ### 2、ceph-purge
 
@@ -73,6 +75,8 @@ public_network: 172.20.2.0/24
 功能：关闭防火墙和selinux，在ceph部署前就执行此操作，防止在部署过程中因为该步骤未操作引发的一些问题。
 
 默认在 `site.yml` 中开启
+
+>在部署集群之前需要执行此操作
 
 ### 4、parted-dev
 
@@ -235,4 +239,6 @@ array_journal=('sdb2' 'sdc2' 'sdd2')    # for filestore only
 1、部署osd有两种方式，一种是bluestore，一种是filestore，脚本里默认是bluestore，可以通过设置 `storage_type` 开关来打开。
 
 2、脚本同样适用于ubuntu系统，只需修改最后启动osd的命令即可
+
+>注意OSD的ID是连续且递增的，需要提前规划好
 
