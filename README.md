@@ -234,11 +234,19 @@ storage_type=bluestore
 
 # journal devices数组
 array_journal=('sdb2' 'sdc2' 'sdd2')    # for filestore only
+
+# osd weight size, 参考值: 1T = 1.0
+osd_weight=1.0
 ```
 
 1、部署osd有两种方式，一种是bluestore，一种是filestore，脚本里默认是bluestore，可以通过设置 `storage_type` 开关来打开。
 
-2、脚本同样适用于ubuntu系统，只需修改最后启动osd的命令即可
+2、`osd_weight` 根据磁盘大小来定，1T设为1.0。如果OSD磁盘的大小不一，可以先设置一个统一值，然后通过 `ceph osd reweight` 来更改。
 
->注意OSD的ID是连续且递增的，需要提前规划好
+3、脚本里会将 osd 里的 journal 软链到指定的 journal 磁盘
+
+4、脚本同样适用于ubuntu系统，只需修改最后启动osd的命令即可
+
+>1、注意OSD的ID是连续且递增的，需要提前规划好
+2、不要给journal磁盘挂载目录，避免操作磁盘导致journal损坏
 
