@@ -250,3 +250,22 @@ osd_weight=1.0
 >1、注意OSD的ID是连续且递增的，需要提前规划好
 2、不要给journal磁盘挂载目录，避免操作磁盘导致journal损坏
 
+- **uuid-deploy-osd.sh**
+
+功能：通过uuid挂载OSD数据和日志磁盘，来部署OSD，同时将挂载信息写入`mount_info` 文件，可作为fstab文件调用执行，也可以将内容写入 `/etc/fstab` 文件。
+
+使用方法和 `manual-deploy-osd.sh` 相同，增加了存放 `mount_info` 信息的文件路径及命名选项：
+
+```
+# 存放OSD挂载相关信息，临时fstab。可以选择存在当前文件夹下，也可以自定义路径
+fstab_info=mount_info
+```
+
+**Q: 为什么采用 `partuuid` ？**
+
+**A: **如果你的机器上有不止一个 SATA, SCSI 或 IDE 磁盘控制器，那么它们所对应的设备节点将会依随机次序添加。这样就可能导致每次引导时设备的名字如 /dev/sda 与 /dev/sdb 互换了，最终导致系统不可引导、kernel panic、或者设备不可见。持久化命名法可以解决这些问题。
+
+有四种持久化命名方案：by-label、by-uuid、by-id 和 by-path。对于那些使用GUID 分区表(GPT)的磁盘，还有额外的两种方案，by-partlabel 和 by-partuuid。
+
+有些磁盘并uuid并不可见，在 `/dev/disk/by-uuid/` 中并没有，并且通过 `blkid` 也不能获得，但是每次磁盘分完区后都有 partuuid，可在 `/dev/disk/by-partuuid/` 中查看，或通过命令 `blkid` 获得。
+
