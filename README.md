@@ -29,6 +29,11 @@ ansible 2.3.0.0
 
 根据系统环境自动安装`lsb_release`，不必手动再安装，并校验是否安装完成。
 
+### all.yml
+
+1、默认 all.yml 修改后可直接用于在centos上部署ceph。
+
+2、新增文件 all.yml.ubuntu，当在ubuntu上部署集群时直接替换 all.yml，然后少量修改即可使用。
 
 ## 新增roles
 ### 1、ceph-install
@@ -263,7 +268,7 @@ fstab_info=mount_info
 
 **Q: 为什么采用 `partuuid` ？**
 
-**A: **如果你的机器上有不止一个 SATA, SCSI 或 IDE 磁盘控制器，那么它们所对应的设备节点将会依随机次序添加。这样就可能导致每次引导时设备的名字如 /dev/sda 与 /dev/sdb 互换了，最终导致系统不可引导、kernel panic、或者设备不可见。持久化命名法可以解决这些问题。
+**A:**如果你的机器上有不止一个 SATA, SCSI 或 IDE 磁盘控制器，那么它们所对应的设备节点将会依随机次序添加。这样就可能导致每次引导时设备的名字如 /dev/sda 与 /dev/sdb 互换了，最终导致系统不可引导、kernel panic、或者设备不可见。持久化命名法可以解决这些问题。
 
 有四种持久化命名方案：by-label、by-uuid、by-id 和 by-path。对于那些使用GUID 分区表(GPT)的磁盘，还有额外的两种方案，by-partlabel 和 by-partuuid。
 
