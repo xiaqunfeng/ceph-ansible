@@ -1,0 +1,23 @@
+---
+- name: purge ceph package
+  apt:
+    name: ceph
+    state: absent
+
+- name: remove ceph_stable.repo
+  command: rm -f /etc/apt/sources.list.d/mirrors_163_com_ceph_debian*
+
+- name: remove librbd1
+  apt:
+    name: librbd1
+    state: absent
+
+- name: remove librgw2
+  apt:
+    name: librgw2
+    state: absent
+
+- name: remove librados2
+  apt:
+    name: librados2
+    state: absent

@@ -16,7 +16,7 @@ ansible 2.3.0.0
   configured module search path = Default w/o overrides
   python version = 2.7.5 (default, Sep 15 2016, 22:37:39) [GCC 4.8.5 20150623 (Red Hat 4.8.5-4)]
 ```
->原先的README.md改名为README-origin.md
+>生产环境中建议osd的data和journal盘均采用uuid的方式挂载，并更新分区表。
 
 ## 修改
 ### ceph-osd role
@@ -69,8 +69,6 @@ public_network: 172.20.2.0/24
 **新增变量**: `ceph_pkg_purge`，默认为 `false`。可在group_vars/all.yml 中开启。
 
 **功能**：当开启时，在purge ceph集群数据完成后，会purge 掉 ceph package，以及ceph 安装版本所对应的相关依赖包，以便环境在下次安装不同版本的 ceph 时不会有问题。
-
->该变量当前只针对 centos 系统实现
 
 **使用方法**：
 当前目录下单独提供了一个yml文件 `ceph-purge.yml` 可供直接调用
@@ -225,7 +223,7 @@ Hyper-Threading: off
 
 功能：手动部署OSD脚本
 
-使用方法：在每台机器上单独执行
+使用方法：先使用ansible部署ceph集群（不包含OSD），然后在每台机器上单独执行该脚本
 
 只需要修改osd列表和磁盘列表即可(filestore的话还要修改日志盘列表)，如下：
 
