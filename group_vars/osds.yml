@@ -221,6 +221,9 @@ third_part_end: 21GiB
 fourth_part_start: 21GiB
 fourth_part_end: 100%
 
+fifth_part_start: 21GiB
+fifth_part_end: 100%
+
 # parted_devices is used for role: rm-partition
 parted_devices:
   - /dev/vdb

@@ -68,6 +68,20 @@
     - parted_num >= 4
     - item.0.get("rc", 0) != 0
 
+- name: fifth partition
+  parted: 
+    device: "{{ item.1 }}"
+    name: data
+    state: present
+    part_start: "{{ fifth_part_start }}"
+    part_end: "{{ fifth_part_end }}"
+  with_together: 
+    - "{{ check_ispartition_results.results }}"
+    - "{{ unparted_devices }}"
+  when: 
+    - parted_num >= 5
+    - item.0.get("rc", 0) != 0
+
 #- name: first partition
 #  parted: 
 #    device: "{{ item }}"

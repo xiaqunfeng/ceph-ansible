@@ -83,7 +83,7 @@ public_network: 172.20.2.0/24
 
 ### 4、parted-dev
 
-**功能**：给磁盘分区，当前支持最多一次给磁盘分四个区
+**功能**：给磁盘分区，当前支持最多一次给磁盘分五个区
 
 **使用方法**：
 
@@ -94,7 +94,7 @@ unparted_devices:
   - /dev/vdd
   - /dev/vdc
 
-parted_num: 4
+parted_num: 5
 
 first_part_start: 1MB
 first_part_end: 1GiB
@@ -106,7 +106,10 @@ third_part_start: 11GiB
 third_part_end: 21GiB
 
 fourth_part_start: 21GiB
-fourth_part_end: 100%
+fourth_part_end: 30GiB
+
+fifth_part_start: 30GiB
+fifth_part_end: 100%
 ```
 
 - unparted_devices: 需要分区的磁盘名列表
