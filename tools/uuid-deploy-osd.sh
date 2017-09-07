@@ -70,6 +70,7 @@ do
     if [ $storage_type == 'bluestore' ]
     then
         chown -R ceph:ceph /var/lib/ceph/osd/ceph-$osd_num
+        chown -R ceph:ceph /var/log/ceph/
         systemctl start ceph-osd@$osd_num
     fi
 done
@@ -85,6 +86,7 @@ then
         ceph-osd -i ${array_osd[$j]} --mkjournal
         chown -R ceph:ceph /dev/${array_journal[$j]}
         chown -R ceph:ceph /var/lib/ceph/osd/ceph-${array_osd[$j]}
+        chown -R ceph:ceph /var/log/ceph/
         systemctl start ceph-osd@${array_osd[$j]}
     done
 fi
