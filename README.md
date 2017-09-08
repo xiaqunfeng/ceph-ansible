@@ -275,3 +275,20 @@ fstab_info=mount_info
 
 有些磁盘并uuid并不可见，在 `/dev/disk/by-uuid/` 中并没有，并且通过 `blkid` 也不能获得，但是每次磁盘分完区后都有 partuuid，可在 `/dev/disk/by-partuuid/` 中查看，或通过命令 `blkid` 获得。
 
+- **ceph-client-rbd-env-check.py**
+
+功能：检查rbd客户端是否可以正常识别文件系统。在rbd环境就绪后，可以运行脚本执行检查。
+
+```
+# python ceph-client-rbd-env-check.py
+EXAMPLE:
+python ceph-client-rbd-env-check.py ${pool_name}
+
+# python ceph-client-rbd-env-check.py rbd
+[PASS] get device fstype okay.
+```
+
+应付的场景：
+
+编译10.2.6和11.2.1版本的rbd，执行发现，在sysfs_write_rbd_add(buf)步中(该块设备已经被文件系统xfs格式化)，创建的/run/udev/data/b251\:0都为异常状态，ID_FS_TYPE字段为空。执行mount都可以正常挂载。
+通过ceph-deploy安装的rbd，rbd map的结果正常，可以看到ID_FS_TYPE字段为xfs。
