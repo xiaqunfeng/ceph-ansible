@@ -53,7 +53,7 @@ public_network: 172.20.2.0/24
 其中`http://172.20.2.158/ceph-kraken-repos` 为我自己配置的内网仓库。
 
 >1、只针对 custom 模式下使用，如果是非`custom` 模式的话在site.yml 中将该role对应的task注释掉
-2、如果是安装bluestore的话，还需要修改配置项：#osd_objectstore: filestore，将其值改为 bluestore
+>2、如果是安装bluestore的话，还需要修改配置项：#osd_objectstore: filestore，将其值改为 bluestore
 
 使用场景：离线或内网环境下的ceph集群安装
 
@@ -192,6 +192,14 @@ osd.2   64     8      8      8      8      8      8      8      8      8      8 
 SUM   : 192    24     24     24     24     24     24     24     24     24     24     |
 ```
 
+- **pg_per_osd.sh**
+
+功能：同上，输出每个osd和pool中pg的数量，同时计算出pg平均值，以及最大最小pg数和其所在的osd，并计算出其和平均值之差的百分比
+
+![pg_per_osd.sh](tools/pg-per-osd.jpg)
+
+>该脚本适用于jewel以上的版本，jewel版本请使用脚本 `pg_per_osd4jewel.sh` 
+
 - **cpu-top.sh**
 
 查看cpu的拓扑结构
@@ -254,7 +262,7 @@ osd_weight=1.0
 4、脚本同样适用于ubuntu系统，只需修改最后启动osd的命令即可
 
 >1、注意OSD的ID是连续且递增的，需要提前规划好
-2、不要给journal磁盘挂载目录，避免操作磁盘导致journal损坏
+>2、不要给journal磁盘挂载目录，避免操作磁盘导致journal损坏
 
 - **uuid-deploy-osd.sh**
 
