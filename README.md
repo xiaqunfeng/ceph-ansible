@@ -196,7 +196,17 @@ SUM   : 192    24     24     24     24     24     24     24     24     24     24
 
 功能：同上，输出每个osd和pool中pg的数量，同时计算出pg平均值，以及最大最小pg数和其所在的osd，并计算出其和平均值之差的百分比
 
-![pg_per_osd.sh](tools/pg-per-osd.jpg)
+![pg_per_osd.sh](tools/pg_per_osd.jpg)
+
+**参数解释：**
+AVE：pg平均值
+**SD：标准差(这是衡量pg分布是否均衡的参数)**
+SUM: pg总数
+Osd：pool中的pg分布在多少个osd中
+Max：最大pg数
+Min：最小pg数
+Per：超出平均值的百分比
+OsdID：最大/最小pg数所在的OSD id
 
 >该脚本适用于jewel以上的版本，jewel版本请使用脚本 `pg_per_osd4jewel.sh` 
 
