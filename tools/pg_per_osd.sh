@@ -21,7 +21,7 @@ END {
  printf("OSD :\t"); for (i=1;i<=slen;i++) printf("%s\t",poolhasid[i]); printf("|\n");
  for (i=1;i<=slen2;i++) printf("########");printf("################\n");
  for (i=1;i<=slen;i++) ave[i]=poollist[i]/poolhasid[i];
- for (i=1;i<=slen;i++) { variance[i]=0; for (j=1;j<=slen1;j++) { variance[i]+=(array[newosdlist[j],newpoollist[i]]-ave[i])*(array[newosdlist[j],newpoollist[i]]-ave[i]) } variance[i]=variance[i]/slen1; SD[i]=sqrt(variance[i]) };
+ for (i=1;i<=slen;i++) { variance[i]=0; for (j=1;j<=slen1;j++) { if(array[newosdlist[j],newpoollist[i]] != 0) variance[i]+=(array[newosdlist[j],newpoollist[i]]-ave[i])*(array[newosdlist[j],newpoollist[i]]-ave[i]) } variance[i]=variance[i]/poolhasid[i]; SD[i]=sqrt(variance[i]) };
  printf("AVE :\t"); for (i=1;i<=slen;i++) printf("%.2f\t",ave[i]); printf("|\n");
  printf("SD  :\t"); for (i=1;i<=slen;i++) printf("%.2f\t",SD[i]); printf("|\n");
  for (i=1;i<=slen2;i++) printf("########");printf("################\n");
