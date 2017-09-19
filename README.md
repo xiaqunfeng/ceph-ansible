@@ -199,13 +199,21 @@ SUM   : 192    24     24     24     24     24     24     24     24     24     24
 ![pg_per_osd.sh](tools/pg_per_osd.jpg)
 
 **参数解释：**
+
 AVE：pg平均值
+
 **SD：标准差(这是衡量pg分布是否均衡的参数)**
+
 SUM: pg总数
+
 Osd：pool中的pg分布在多少个osd中
+
 Max：最大pg数
+
 Min：最小pg数
+
 Per：超出平均值的百分比
+
 OsdID：最大/最小pg数所在的OSD id
 
 >该脚本适用于jewel以上的版本，jewel版本请使用脚本 `pg_per_osd4jewel.sh` 
