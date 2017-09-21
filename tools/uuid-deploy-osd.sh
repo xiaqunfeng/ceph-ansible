@@ -71,7 +71,11 @@ do
     then
         chown -R ceph:ceph /var/lib/ceph/osd/ceph-$osd_num
         chown -R ceph:ceph /var/log/ceph/
-        systemctl start ceph-osd@$osd_num
+        if test -f /etc/redhat-release ; then
+            systemctl start ceph-osd@$osd_num
+        else
+            start ceph-osd id=$osd_num          # start osd for ubuntu
+        fi
     fi
 done
 
@@ -87,6 +91,10 @@ then
         chown -R ceph:ceph /dev/${array_journal[$j]}
         chown -R ceph:ceph /var/lib/ceph/osd/ceph-${array_osd[$j]}
         chown -R ceph:ceph /var/log/ceph/
-        systemctl start ceph-osd@${array_osd[$j]}
+        if test -f /etc/redhat-release ; then
+            systemctl start ceph-osd@${array_osd[$j]}
+        else
+            start ceph-osd id=${array_osd[$j]}
+        fi
     done
 fi
