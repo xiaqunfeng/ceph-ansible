@@ -82,7 +82,7 @@ do
             systemctl start ceph-osd@$osd_num
         else
             start ceph-osd id=$osd_num			# start osd for ubuntu
-        if
+        fi
     fi
 done
 
