@@ -305,51 +305,10 @@ fstab_info=mount_info
 
 功能：检查rbd客户端是否可以正常识别文件系统。在rbd环境就绪后，可以运行脚本执行检查。
 
-```
-# python ceph-client-rbd-env-check.py
-EXAMPLE:
-python ceph-client-rbd-env-check.py ${pool_name}
+详见：[客户端rbd环境检查](http://xiaqunfeng.cc/2018/03/08/%E5%AE%A2%E6%88%B7%E7%AB%AFrbd%E7%8E%AF%E5%A2%83%E6%A3%80%E6%9F%A5/)
 
-# python ceph-client-rbd-env-check.py rbd
-[PASS] get device fstype okay.
-```
+- **ceph-pg-reweight**
 
-应付的场景：
+功能：提供何时该调整权重，以及调整权重的方法。
 
-  编译10.2.6和11.2.1版本的rbd，执行发现，在sysfs_write_rbd_add(buf)步中(该块设备已经被文件系统xfs格式化)，创建的/run/udev/data/b251\:0都为异常状态，ID_FS_TYPE字段为空。执行mount都可以正常挂载。
-  实际上，通过apt-get install ceph-common的rbd存在异常，而apt-get install ceph的rbd表现正常(ceph-deploy部署的rbd是通过apt-get install ceph实现的)。
-这个异常与rbd源代码没关系，而是与安装的方式有关，这可能是有组件的依赖有关系。
-
-解决方法：
-
-暂时无法从rbd代码层面定位问题，通过提供工具检测暂时绕过这个问题。
-ceph-client-rbd-env-check.py可以协助检查rbd客户端是否可以正常识别文件系统。在rbd环境就绪后，可以运行脚本执行检查。
-
-异常情形：
-
-```
-# cat /run/udev/data/b251\:0 
-S:rbd/rbd/rbd0
-I:162920386411
-E:ID_FS_TYPE=
-G:systemd
-
-# python ceph-client-env-rbd-test.py rbd
-[FAIL] cmd='lsblk -nd -o FSTYPE /dev/rbd0', desc='get device fstype'
-```
-
-正常情形:
-
-```
-# cat /run/udev/data/b251\:0 
-S:rbd/rbd/rbd0
-I:163204714535
-E:ID_FS_UUID=d0296c84-56d7-4adb-89b1-9f60c6a54309
-E:ID_FS_UUID_ENC=d0296c84-56d7-4adb-89b1-9f60c6a54309
-E:ID_FS_TYPE=xfs
-E:ID_FS_USAGE=filesystem
-G:systemd
-
-# python ceph-client-env-rbd-test.py rbd
-[PASS] get device fstype okay.
-```
+详见：[ceph osd权重调整](http://xiaqunfeng.cc/2018/03/08/ceph-osd%E6%9D%83%E9%87%8D%E8%B0%83%E6%95%B4/)
